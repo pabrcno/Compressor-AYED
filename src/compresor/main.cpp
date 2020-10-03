@@ -1,100 +1,3 @@
-//
-//#ifndef _MAIN
-//#define _MAIN
-//
-//#include <iostream>
-//#include "biblioteca/tads/Arr.hpp"
-//#include "biblioteca/tads/Map.hpp"
-//#include "biblioteca/tads/List.hpp"
-//#include "biblioteca/tads/Stack.hpp"
-//#include "biblioteca/tads/Queue.hpp"
-//#include "biblioteca/funciones/strings.hpp"
-//#include "biblioteca/funciones/tokens.hpp"
-//#include "biblioteca/funciones/files.hpp"
-//#include "HuffmanTree.hpp"
-//
-//using namespace std;
-//
-//
-//HuffmanTreeInfo* treeInfo(int c, long n, HuffmanTreeInfo* left, HuffmanTreeInfo* right)
-//{
-//   HuffmanTreeInfo* node = new HuffmanTreeInfo();
-//   node->c=c;
-//   node->n=n;
-//   node->left=left;
-//   node->right=right;
-//   return node;
-//}
-//
-//HuffmanTreeInfo* createTree()
-//{
-//   // nivel 5 (ultimo nivel)
-//   HuffmanTreeInfo* nS = treeInfo('S', 1, NULL, NULL);
-//   HuffmanTreeInfo* nR = treeInfo('R', 1, NULL, NULL);
-//   HuffmanTreeInfo* nN = treeInfo('N', 1, NULL, NULL);
-//   HuffmanTreeInfo* nI = treeInfo('I', 1, NULL, NULL);
-//
-//   // nivel 4
-//   HuffmanTreeInfo* a2 = treeInfo(256+2, 2, nS, nR);
-//
-//   HuffmanTreeInfo* a1 = treeInfo(256+1, 2, nN, nI);
-//   HuffmanTreeInfo* nT = treeInfo('T', 2, NULL, NULL);
-//   HuffmanTreeInfo* nE = treeInfo('E', 2, NULL, NULL);
-//   HuffmanTreeInfo* nA = treeInfo('A', 2, NULL, NULL);
-//   HuffmanTreeInfo* nU = treeInfo('U', 1, NULL, NULL);
-//
-//   // nivel 3
-//   HuffmanTreeInfo* nC = treeInfo('C', 7, NULL, NULL);
-//   HuffmanTreeInfo* nM = treeInfo('M', 5, NULL, NULL);
-//   HuffmanTreeInfo* nESP = treeInfo(' ', 5, NULL, NULL);
-//   HuffmanTreeInfo* a5 = treeInfo(256+5, 4, a2, a1);
-//   HuffmanTreeInfo* a4 = treeInfo(256+4, 4, nT, nE);
-//   HuffmanTreeInfo* a3 = treeInfo(256+3, 3, nA, nU);
-//
-//   // nivel 2
-//   HuffmanTreeInfo* a8 = treeInfo(256+8, 12, nC, nM);
-//   HuffmanTreeInfo* nO = treeInfo('O', 11, NULL, NULL);
-//   HuffmanTreeInfo* a7 = treeInfo(256+7, 9, nESP, a5);
-//   HuffmanTreeInfo* a6 = treeInfo(256+6, 7, a4, a3);
-//
-//   // nivel 1
-//   HuffmanTreeInfo* a10 = treeInfo(256+10, 23, a8, nO);
-//   HuffmanTreeInfo* a9  = treeInfo(256+9, 16, a7, a6);
-//
-//   // nivel 0 (raiz)
-//   HuffmanTreeInfo* a11 = treeInfo(256+11, 39, a10, a9);
-//
-//   return a11;
-//}
-//
-//// PROGRAMA PRINCIPAL
-//int main(int argc,char** argv)
-//{
-//   // obtengo el arbol
-//   HuffmanTreeInfo* root = createTree();
-//
-//   // recorro el arbol
-//   HuffmanTree tu = huffmanTree(root);
-//
-//   string cod;
-//   HuffmanTreeInfo* x = treeUtilNext(tu,cod);
-//   while( x!=NULL )
-//   {
-//      cout << x->c << ", ("<<x->n <<"), " << "[" << cod <<"]" << endl;
-//      x = treeUtilNext(tu,cod);
-//   }
-//
-//   return 0;
-//}
-//
-//
-//
-//
-//
-//#endif
-
-
-
 #ifndef _MAIN
 #define _MAIN
 
@@ -123,6 +26,10 @@ struct HuffmanTable
 {
    unsigned int n = 0;
    string code;
+};
+
+struct decodeInfo{
+   unsigned char
 };
 
 void contarOcurrencias(string fName,HuffmanTable tabla[])
@@ -220,8 +127,23 @@ void grabarArchivoComprimido(string fName,HuffmanTable tabla[])
    FILE* fOriginal = fopen(fName.c_str(), "r+b");
 
    write<unsigned char>(fComprimido, hojas);
-
    BitWriter bw = bitWriterCreate(fComprimido);
+
+   unsigned long long int charCounter = 0;
+   for (int i = 0; i < 256; i++){
+      if( tabla[i].n > 0){
+         charCounter += tabla[i].n;
+         write<char>(fComprimido, i);
+         write<unsigned char>(fComprimido, length(tabla[i].code));
+         for(int j = 0; j < length(tabla[i].code); j++){
+            bitWriterWrite(bw, tabla[i].code[j]);
+         }
+         bitWriterFlush(bw);
+      }
+   }
+
+   write<unsigned long long int>(fComprimido, charCounter);
+
    char ch = read<char>(fOriginal);
    while(!feof(fOriginal)){
       HuffmanTable hTableCell = tabla[ch];
@@ -260,9 +182,28 @@ void comprimir(string fName)
    grabarArchivoComprimido(fName,tabla);
 }
 
+// -----------------------------------------------------------------------------------------
+
 void descomprimir(string fName)
 {
+   FILE* f = fopen (fName.c_str(), "r+b");
+
+   // leer primer byte (cant. hojas)
+   unsigned char hojas = read<unsigned char>(f);
+   // iterar por esa cantidad, obteniendo cada registro
+   for(int i = 0; i < hojas; i++){
+      read
+   }
+   // por c/reg vamos a obtener el huffman code
+
+   // partir de la raiz y comenzar a reconstruir el arbol
+
+   // una vez que tenemos el arbol, leemos bit a bit el archivo y recorremos paso a paso el arbol
+
+   fclose(f);
 }
+
+// -------------------------------------------------------------------------------------------
 
 // PROGRAMA PRINCIPAL
 int main()
