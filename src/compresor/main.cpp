@@ -70,14 +70,16 @@ void crearLista(List<HuffmanTreeInfo>& lista,HuffmanTable tabla[])
 }
 
 void branchCreate(List<HuffmanTreeInfo>& lista, HuffmanTreeInfo*& root, int& fatherCode){
-   HuffmanTreeInfo* leftChild = listNext<HuffmanTreeInfo>(lista);
    HuffmanTreeInfo* rightChild = listNext<HuffmanTreeInfo>(lista);
-
+   HuffmanTreeInfo* leftChild = listNext<HuffmanTreeInfo>(lista);
    HuffmanTreeInfo father;
    father.left = leftChild;
    father.right = rightChild;
    father.n = leftChild->n + rightChild->n;
    father.c = fatherCode;
+
+   // listRemove<HuffmanTreeInfo>(lista, *leftChild, cmpHuffmanTreeInfo);
+   // listRemove<HuffmanTreeInfo>(lista, *rightChild, cmpHuffmanTreeInfo);
 
    root = listOrderedInsert<HuffmanTreeInfo>(lista, father, cmpHuffmanTreeInfo);
    fatherCode++;
@@ -94,6 +96,7 @@ HuffmanTreeInfo* crearArbol(List<HuffmanTreeInfo> lista)
    branchCreate(lista, root, fatherCode);
 
    listReset<HuffmanTreeInfo>(lista);
+
    return root;
 }
 
@@ -104,6 +107,7 @@ void cargarCodigosEnTabla(HuffmanTreeInfo* raiz,HuffmanTable tabla[])
    while(huffmanTreeHasNext(tree)){
       HuffmanTreeInfo* hInfo = huffmanTreeNext(tree, cod);
       HuffmanTable* celdaAModificar = &(tabla[hInfo->c]);
+      cout << "["<<hInfo->c << "] ocurrencias: "<< hInfo->n << ", codigo: "<< cod<<endl;
       celdaAModificar->code = cod;
    }
 }
@@ -137,7 +141,7 @@ void grabarArchivoComprimido(string fName,HuffmanTable tabla[])
          write<char>(fComprimido, i);
          write<unsigned char>(fComprimido, length(tabla[i].code));
          for(int j = 0; j < length(tabla[i].code); j++){
-            bitWriterWrite(bw, tabla[i].code[j]);
+            bitWriterWrite(bw, charToInt(tabla[i].code[j]));
          }
          bitWriterFlush(bw);
       }
@@ -293,7 +297,7 @@ void descomprimir(string fName)
    }
 
    rebuildTree(root, pathInfo, hojas);
-   // :D
+   // D:<
 
    readAndDecode(fName, f, root);
 
