@@ -25,13 +25,13 @@ BitReader bitReaderCreate(FILE* f)
 {
     BitReader br;
     br.ch = 0;
-    br.cont = 8;
+    br.cont = 7;
     br.f = f;
     return br;
 }
 
 int bitReaderRead(BitReader& br){
-   if (br.cont == 8){
+   if (br.cont == 7){
        br.ch = read<unsigned char>(br.f);
    }
    unsigned char aux = br.ch;
@@ -41,6 +41,9 @@ int bitReaderRead(BitReader& br){
    int r = br.ch;
    br.ch = aux;
    br.cont--;
+   if(br.cont == -1){
+       br.cont = 7;
+   }
    return r;
 }
 

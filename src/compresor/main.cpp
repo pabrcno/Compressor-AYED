@@ -28,8 +28,9 @@ struct HuffmanTable
    string code;
 };
 
-struct decodeInfo{
-   unsigned char
+struct PathInfo {
+   char ch;
+   string path;
 };
 
 void contarOcurrencias(string fName,HuffmanTable tabla[])
@@ -184,21 +185,117 @@ void comprimir(string fName)
 
 // -----------------------------------------------------------------------------------------
 
+void rebuildTree (HuffmanTreeInfo*& root, PathInfo pathInfo[], unsigned char hojas){
+   for(int i = 0; i < hojas ; i++){
+      PathInfo info = pathInfo[i];
+
+      HuffmanTreeInfo* position;
+      for(int j = 0; j < length(info.path) ; j++){
+         if (j==0){
+            position = root;
+         }
+
+         char bit = info.path[j];
+         if(bit == '0'){
+            if(position->left != NULL){
+               position = position->left;
+            }
+            else{
+               HuffmanTreeInfo* child = new HuffmanTreeInfo();
+               child->left = NULL;
+               child->right = NULL;
+               position->left = child;
+               position = child;
+               if (j == length(info.path)-1){
+                  position->c = info.ch;
+               }
+            }
+         }
+         else{
+            if(position->right != NULL){
+               position = position->right;
+            }
+            else{
+               HuffmanTreeInfo* child = new HuffmanTreeInfo();
+               child->left = NULL;
+               child->right = NULL;
+               position->right = child;
+               position = child;
+               if (j == length(info.path)-1){
+                  position->c = info.ch;
+               }
+            }
+
+         }
+      }
+   }
+}
+
+void readAndDecode (string fName, FILE* f, HuffmanTreeInfo* root){
+   string newFileName = substring(fName, 0, length(fName)-4);
+   FILE* newF = fopen(newFileName.c_str(), "w+b");
+
+   BitReader br = bitReaderCreate(f);
+   BitWriter bw = bitWriterCreate(newF);
+
+   HuffmanTreeInfo* current = root;
+   unsigned long long int longCodificada = read<unsigned long long int>(f);
+   for(int i = 0; i < longCodificada; i=i){
+      int bit = bitReaderRead(br);
+      if (bit == 0){
+            current = current->left;
+            if(current->left == NULL){
+               unsigned char ch = current->c;
+               write<unsigned char>(newF, ch);
+               i++;
+               current = root;
+            }
+         }
+      else{
+         current = current->right;
+         if (current->right == NULL){
+            unsigned char ch = current->c;
+            write<unsigned char>(newF, ch);
+            i++;
+            current = root;
+         }
+      }
+   }
+
+   fclose(newF);
+}
+
 void descomprimir(string fName)
 {
    FILE* f = fopen (fName.c_str(), "r+b");
 
    // leer primer byte (cant. hojas)
    unsigned char hojas = read<unsigned char>(f);
+
+   //crear arbol
+   HuffmanTreeInfo* root = new HuffmanTreeInfo();
+   root->left = NULL;
+   root->right = NULL;
    // iterar por esa cantidad, obteniendo cada registro
+   int cantHojas = hojas;
+   PathInfo pathInfo[cantHojas];
    for(int i = 0; i < hojas; i++){
-      read
+      BitReader br = bitReaderCreate(f);
+      char ch = read<char>(f);
+      unsigned char codeLength = read<unsigned char>(f);
+
+      string path = "";
+      for (int children = 0; children < codeLength; children++){
+         int bit = bitReaderRead(br);
+         path += intToString(bit);
+      }
+      pathInfo[i] = {ch, path};
    }
-   // por c/reg vamos a obtener el huffman code
 
-   // partir de la raiz y comenzar a reconstruir el arbol
+   rebuildTree(root, pathInfo, hojas);
+   // :D
 
-   // una vez que tenemos el arbol, leemos bit a bit el archivo y recorremos paso a paso el arbol
+   readAndDecode(fName, f, root);
 
    fclose(f);
 }
@@ -206,9 +303,8 @@ void descomprimir(string fName)
 // -------------------------------------------------------------------------------------------
 
 // PROGRAMA PRINCIPAL
-int main()
-{
-   string fName = "C:\\Users\\agus_\\Documents\\Programming\\C++\\AYED2C\\PRUEBA.txt";
+int main(int argc,char** argv){
+   string fName = argv[1];
    if( !endsWith(fName,".huf") )
    {
       comprimir(fName);
