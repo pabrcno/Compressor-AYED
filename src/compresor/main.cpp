@@ -159,7 +159,7 @@ void comprimir(string fName)
    grabarArchivoComprimido(fName,tabla);
 }
 
-// -----------------------------------------------------------------------------------------
+//Decompress
 
 void rebuildTree (HuffmanTreeInfo*& root, PathInfo pathInfo[], unsigned char hojas){
    for(int i = 0; i < hojas ; i++){
@@ -245,20 +245,15 @@ void descomprimir(string fName)
    fclose(f);
 }
 
-
-// -------------------------------------------------------------------------------------------
-
 // PROGRAMA PRINCIPAL
 int main(int argc,char** argv){
    string fName = argv[1];
-   // string fName = "C:\\Users\\agus_\\Documents\\Programming\\C++\\AYED2C\\src\\a.txt.huf";
    if(!endsWith(fName,".huf")){
       comprimir(fName);
    }
    else{
       descomprimir(fName);
    }
-
    return 0;
 }
 
