@@ -32,7 +32,7 @@ struct PathInfo {
    string path;
 };
 
-
+//Compress
 void contarOcurrencias(string fName,HuffmanTable tabla[]){
    FILE* f = fopen(fName.c_str(), "r+b");
    char ch = read<char>(f);
@@ -62,6 +62,8 @@ void crearLista(List<HuffmanTreeInfo>& lista,HuffmanTable tabla[]){
 
 
 void branchCreate(List<HuffmanTreeInfo>& lista, HuffmanTreeInfo*& root, int& fatherCode){
+   // asignamos los dos hijos en este orden porque la lista esta ordenada y 
+   // el derecho siempre debe ser el menor
    HuffmanTreeInfo* rightChild = listNext<HuffmanTreeInfo>(lista);
    HuffmanTreeInfo* leftChild = listNext<HuffmanTreeInfo>(lista);
    HuffmanTreeInfo father = {fatherCode, (leftChild->n + rightChild->n),  leftChild, rightChild};
@@ -71,10 +73,13 @@ void branchCreate(List<HuffmanTreeInfo>& lista, HuffmanTreeInfo*& root, int& fat
 
 
 HuffmanTreeInfo* crearArbol(List<HuffmanTreeInfo> lista){
+   //nodo superior del arbol a devolver
    HuffmanTreeInfo* root;
+   //reseteamos la lista por seguridad
    listReset<HuffmanTreeInfo>(lista);
    int fatherCode = 257;
    while(lista.current->sig->sig){
+      //nos aseguramos que haya 2 siguientes para unirlos en un padre
       branchCreate(lista, root, fatherCode);
    }
    branchCreate(lista, root, fatherCode);
@@ -104,15 +109,20 @@ unsigned char calcularHojas(HuffmanTable tabla[]){
 }
 
 void writeDataStructure (FILE* fComprimido, HuffmanTable tabla[], BitWriter& bw){
+   // data requerida
+   // creamos el dato que va a almacenar la cant de caracteres del archivo
    unsigned long long int charCounter = 0;
    for (int i = 0; i < 256; i++){
+      //por cada caracter buscamos los que tengan incidencia
       if( tabla[i].n > 0){
          charCounter += tabla[i].n;
          write<char>(fComprimido, i);
+         // escribimos el caracter el largo del codigo en bits y el codigo
          write<unsigned char>(fComprimido, length(tabla[i].code));
          for(int j = 0; j < length(tabla[i].code); j++){
             bitWriterWrite(bw, charToInt(tabla[i].code[j]));
          }
+         // nos aseguramos que el byte este completo
          bitWriterFlush(bw);
       }
    }
@@ -121,6 +131,7 @@ void writeDataStructure (FILE* fComprimido, HuffmanTable tabla[], BitWriter& bw)
 
 
 void writeCompressedFile (FILE* fOriginal, HuffmanTable tabla[], BitWriter& bw){
+   // escribe los caracteres en bits
    char ch = read<char>(fOriginal);
    while(!feof(fOriginal)){
       HuffmanTable hTableCell = tabla[ch];
@@ -148,8 +159,7 @@ void grabarArchivoComprimido(string fName,HuffmanTable tabla[]){
 }
 
 
-void comprimir(string fName)
-{
+void comprimir(string fName){
    HuffmanTable tabla[256];
    contarOcurrencias(fName,tabla);
    List<HuffmanTreeInfo> lista = listCreate<HuffmanTreeInfo>();
@@ -161,15 +171,36 @@ void comprimir(string fName)
 
 //Decompress
 
+void loadPathInfo (PathInfo pathInfo[], unsigned char hojas, FILE* f){
+   //cargamos el path en un string
+   for(int i = 0; i < hojas; i++){
+      BitReader br = bitReaderCreate(f);
+      char ch = read<char>(f);
+      unsigned char codeLength = read<unsigned char>(f);
+      string path = "";
+      for (int children = 0; children < codeLength; children++){
+         int bit = bitReaderRead(br);
+         path += intToString(bit);
+      }
+      pathInfo[i] = {ch, path};
+   }
+}
+
 void rebuildTree (HuffmanTreeInfo*& root, PathInfo pathInfo[], unsigned char hojas){
    for(int i = 0; i < hojas ; i++){
+      //contiene el camino que debe recrrer el algoritmo y su caracter
       PathInfo info = pathInfo[i];
       HuffmanTreeInfo* position;
       for(int j = 0; j < length(info.path) ; j++){
+         //si es el primer paso, establecemos que parte de la raiz
          j==0? position = root : 0;
+         //leemos bit a bit el camino
          char bit = info.path[j];
+         // decidimos si ir de izquierda o a derecha
          HuffmanTreeInfo* direction = new HuffmanTreeInfo();
          bit == '0'? direction = position->left : direction = position->right;
+         // si tiene para seguir se mueve sino lo crea.
+         //caminante no hay camino se hace camino al andar.
          if(direction != NULL){
             position = direction;
             }
@@ -188,6 +219,8 @@ void rebuildTree (HuffmanTreeInfo*& root, PathInfo pathInfo[], unsigned char hoj
 
 
 void readAndDecode (string fName, FILE* f, HuffmanTreeInfo* root){
+   //leemos bit a bit el mensaje codificado hasta que llegamos a una hoja
+   // escribimos el char asociado.
    string newFileName = substring(fName, 0, length(fName)-4);
    FILE* newF = fopen(newFileName.c_str(), "w+b");
    BitReader br = bitReaderCreate(f);
@@ -212,19 +245,6 @@ void readAndDecode (string fName, FILE* f, HuffmanTreeInfo* root){
 }
 
 
-void loadPathInfo (PathInfo pathInfo[], unsigned char hojas, FILE* f){
-   for(int i = 0; i < hojas; i++){
-      BitReader br = bitReaderCreate(f);
-      char ch = read<char>(f);
-      unsigned char codeLength = read<unsigned char>(f);
-      string path = "";
-      for (int children = 0; children < codeLength; children++){
-         int bit = bitReaderRead(br);
-         path += intToString(bit);
-      }
-      pathInfo[i] = {ch, path};
-   }
-}
 
 
 void descomprimir(string fName)
