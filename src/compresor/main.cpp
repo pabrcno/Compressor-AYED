@@ -15,6 +15,7 @@
 #include "../biblioteca/funciones/arrays.hpp"
 #include "../biblioteca/funciones/sort.hpp"
 #include "../biblioteca/funciones/lists.hpp"
+
 #include "../biblioteca/tads/BitWriter.hpp"
 #include "../biblioteca/tads/BitReader.hpp"
 #include "HuffmanSetup.hpp"
@@ -147,7 +148,7 @@ void writeCompressedFile (FILE* fOriginal, HuffmanTable tabla[], BitWriter& bw){
 
 void grabarArchivoComprimido(string fName,HuffmanTable tabla[]){
    unsigned char hojas = calcularHojas(tabla);
-   string fileNameHuf = substring(fName, length(fName)-4) + ".huf";
+   string fileNameHuf = fName + ".huf";
    FILE* fComprimido = fopen(fileNameHuf.c_str(), "w+b");
    FILE* fOriginal = fopen(fName.c_str(), "r+b");
    write<unsigned char>(fComprimido, hojas);
@@ -252,7 +253,7 @@ void descomprimir(string fName)
    FILE* f = fopen (fName.c_str(), "r+b");
    // leer primer byte (cant. hojas)
    unsigned char hojas = read<unsigned char>(f);
-   //recrear arbol
+   //crear arbol
    HuffmanTreeInfo* root = new HuffmanTreeInfo();
    root->left = NULL;
    root->right = NULL;
