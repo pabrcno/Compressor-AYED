@@ -1,4 +1,4 @@
-Huffman compressor algorithm implementation
+Huffman compressor algorithm implementation,
 project developed in C++, all functions and Data Structures 
 (Arrays, Maps, Bit Wise Operators, etc) 
 used in this code have been developed by myself from scratch.
